@@ -1,0 +1,70 @@
+# app.py (Flask backend)
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+
+app = Flask(HealthIq)
+CORS(app)  # Allow frontend to communicate with backend
+
+# Water intake calculation based on gender and weight (in kg)
+def calculate_water_intake(gender: str, weight: float) -> int:
+    if gender.lower() == "male":
+        return int(weight * 35)  # mL
+    elif gender.lower() == "female":
+        return int(weight * 31)  # mL
+    else:
+        return int(weight * 33)  # default average
+
+# Exercise reminder message generator
+def get_exercise_reminder():
+    return "Time to stretch or take a quick walk! Keeping active is key to your health 💪"
+
+# Sleep recommendation based on age (optional extension)
+def get_sleep_recommendation(age: int) -> str:
+    if age < 13:
+        return "9–11 hours of sleep recommended for children."
+    elif age < 18:
+        return "8–10 hours of sleep recommended for teens."
+    elif age < 65:
+        return "7–9 hours of sleep recommended for adults."
+    else:
+        return "7–8 hours of sleep recommended for seniors."
+
+@app.route("/calculate", methods=["POST"])
+def calculate():
+    data = request.json
+    gender = data.get("gender")
+    weight = data.get("weight")
+
+    if not gender or not weight:
+        return jsonify({"error": "Missing gender or weight"}), 400
+
+    try:
+        weight = float(weight)
+    except ValueError:
+        return jsonify({"error": "Invalid weight value"}), 400
+
+    water_intake = calculate_water_intake(gender, weight)
+    return jsonify({"recommended_water_ml": water_intake})
+
+@app.route("/reminder/exercise", methods=["GET"])
+def exercise_reminder():
+    return jsonify({"reminder": get_exercise_reminder()})
+
+@app.route("/recommend/sleep", methods=["POST"])
+def sleep_recommendation():
+    data = request.json
+    age = data.get("age")
+
+    if age is None:
+        return jsonify({"error": "Missing age"}), 400
+
+    try:
+        age = int(age)
+    except ValueError:
+        return jsonify({"error": "Invalid age value"}), 400
+
+    recommendation = get_sleep_recommendation(age)
+    return jsonify({"sleep_recommendation": recommendation})
+
+if HealthIq == "__main__":
+    app.run(debug=True)
